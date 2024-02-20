@@ -1,6 +1,8 @@
 ﻿// Test2DDynMas.cpp : Этот файл содержит функцию "main". Здесь начинается и заканчивается выполнение программы.
 //
 
+// Сделать случайный выбор спавнившийся фигуры
+
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <iostream>
@@ -251,14 +253,24 @@ private:
     int _width = 0;
 };
 
-struct blockBox {
+struct Block {
 
+    virtual void show() {}
+    virtual void hide() {}
+    virtual void moveLeft() {}
+    virtual void moveRight() {}
+    virtual void moveDown() {}
+    virtual void spawn() {}
+    virtual bool isDownConflict() { }
+
+};
+
+struct blockBox : Block {
     blockBox(GameBoard* board, int x = 5, int y = 0) {
         _board = board;
         _x = x;
         _y = y;
     }
-
     void show() {
         gotoxy(_x, _y);
         std::cout << "*";
@@ -274,7 +286,6 @@ struct blockBox {
         _board->write(2, _y, _x);
         --_x;
     }
-
     void hide() {
         gotoxy(_x, _y);
         std::cout << " ";
@@ -374,6 +385,153 @@ private:
 
 };
 
+struct blockStick : Block {
+    blockStick(GameBoard* board, int x = 5, int y = 0) {
+        _board = board;
+        _x = x;
+        _y = y;
+    }
+    void show() {
+        //for (int i = 0; i < 4; ++i) {
+
+        //    gotoxy(_x, _y + i);
+        //    //std::cout << "*";
+        //    _board->write(2, _y + 1, _x);
+
+        //}
+        gotoxy(_x, ++_y);
+        _board->write(2, _y, _x);
+        gotoxy(_x, ++_y);
+        _board->write(2, _y, _x);
+        gotoxy(_x, ++_y);
+        _board->write(2, _y, _x);
+        _y -= 3;
+    }
+    void hide() {
+        //for (int i = 0; i < 4; ++i) {
+
+        //    gotoxy(_x, _y = +i);
+        //    //std::cout << " ";
+        //    _board->write(0, _y, _x);
+
+        //}
+        gotoxy(_x, ++_y);
+        _board->write(0, _y, _x);
+        gotoxy(_x, ++_y);
+        _board->write(0, _y, _x);
+        gotoxy(_x, ++_y);
+        _board->write(0, _y, _x);
+        _y -= 3;
+    }
+
+    void moveLeft() {
+        if (!isLeftConflict()) {
+            this->hide();
+            --_x;
+            this->show();
+        }
+    }
+    void moveRight() {
+        if (!isRightConflict()) {
+            this->hide();
+            ++_x;
+            this->show();
+        }
+    }
+    void moveDown() {
+        if (!isDownConflict()) {
+            this->hide();
+            ++_y;
+            this->show();
+        }
+    }
+
+    bool isLeftConflict() {
+        if (_x == _board->getx() + 1) {
+            return true;
+        }
+        return false;
+    }
+    bool isRightConflict() {
+        if (_x == _board->getx() + _WIDTH - 2) {
+            return true;
+        }
+        return false;
+    }
+    bool isDownConflict() { // Проверка границ
+        int r = 0;
+        /*if (_y == _board->gety() + _HEIGHT - 3) {*/
+        if (_board->get(this->gety() + 4, this->getx()) == 1 ||      // Надо оптимизировать // Проверка границ поля
+                                                                     // Проверка столкновения с
+            _board->get(this->gety() + 4, this->getx()) == 2) { 
+            // другими фигурами
+            this->spawn(); // Сброс новой фигуры
+            return true;
+        }
+        return false;
+    }
+    int getx() {
+        return _x;
+    }
+    int gety() {
+        return _y;
+    }
+    void spawn() {
+        this->checkLines();
+        _x = 5;
+        _y = 0;
+        this->show();
+    }
+
+    void checkLines() {
+        int d = 0;
+        //std::cout << "C: " << _board->get(_HEIGHT - 2, _WIDTH - 2);
+        for (int i = 1; i < _HEIGHT; ++i) {
+            d = 0;
+            for (int j = 1; j < _WIDTH; ++j) {
+                if (_board->get(i, j) == 2) {
+                    ++d;
+                    if (d == 14) {
+                        _board->deleteLine(i);
+                    }
+                    /*gotoxy(40, 5);
+                    std::cout << "Counter: " << d;*/
+                }
+
+            }
+        }
+    }
+
+    
+
+private:
+    int _x = 0;
+    int _y = 0;
+    GameBoard* _board = 0;
+
+};
+
+Block* randomFigure(Block* box, Block* stick) {
+
+    int start = 0;
+    int end = 1;
+
+    int r = rand() % (end - start + 1) + start;
+
+    switch (r)
+    {
+    case 0:
+        return box;
+        break;
+    case 1:
+        return stick;
+        break;
+    default:
+        break;
+    }
+
+}
+
 int main()
 {
     
@@ -381,47 +539,69 @@ int main()
 
     myBoard->show();
 
-    blockBox* Box = new blockBox(myBoard);
+    Block* Box = new blockBox(myBoard);
 
-    Box->show();
+    Block* Stick = new blockStick(myBoard);
+
+    //Box->show();
+
+    //Stick->show();
 
     myBoard->showDebug(20, 0);
 
-    _getch();
+    Block* Fig = 0;
 
-    Box->hide();
+    //_getch();
+
+    //Box->hide();
+
+    //Stick->hide();
 
     myBoard->showDebug(20, 0);
 
     int key = 0;
 
+    Fig = randomFigure(Box, Stick);
+
     while (true) {
         while (!_kbhit())
         {
-            Box->moveDown();
+            //Box->moveDown();
+            //Stick->moveDown();
+            Fig->moveDown();
             myBoard->show();
             myBoard->showDebug(20, 0);
             Sleep(100);
         }
         key = _getch();
-        gotoxy(35, 20);
-        std::cout << key;
+        //gotoxy(35, 20);
+        //std::cout << key;
         switch (key)
         {
         case 72:
             break;
         case 80:
-            Box->moveDown();
+            //Box->moveDown();
+            //Stick->moveDown();
+            if (Fig->isDownConflict()) {
+                Fig = randomFigure(Box, Stick);
+                Fig->spawn();
+            }
+            Fig->moveDown();
             myBoard->show();
             myBoard->showDebug(20, 0);
             break;
         case 75: 
-            Box->moveLeft();
+            //Box->moveLeft();
+            //Stick->moveLeft();
+            Fig->moveLeft();
             myBoard->show();
             myBoard->showDebug(20, 0);
             break;
         case 77:
-            Box->moveRight();
+            //Box->moveRight();
+            //Stick->moveRight();
+            Fig->moveRight();
             myBoard->show();
             myBoard->showDebug(20, 0);
             break;
