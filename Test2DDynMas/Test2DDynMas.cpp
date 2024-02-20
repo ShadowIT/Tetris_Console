@@ -62,17 +62,22 @@ struct intArray2D : Array2D {
             }
         }
     }
-    void print() { // Вывод в консоль двумерного динамического массива размерностью width * height типа Int
+    void print(int x = 0, int y = 0) { // Вывод в консоль двумерного динамического массива размерностью width * height типа Int
         //std::cout << std::endl;
         for (int i = 0; i < _height; ++i) {
             for (int j = 0; j < _width; ++j) {
                 gotoxy(j, i);
-                std::cout << _dynMas[i][j];
+                if (_dynMas[i][j] == 0) {
+                    std::cout << " ";
+                }
+                else {
+                    std::cout << _dynMas[i][j];
+                }
             }
             //std::cout << std::endl;
         }
     }
-    void print(int x, int y) { // Вывод в консоль двумерного динамического массива размерностью width * height типа Int
+    void printDebug(int x = 0, int y = 0) { // Вывод в консоль двумерного динамического массива размерностью width * height типа Int
         //std::cout << std::endl;
         for (int i = 0; i < _height; ++i) {
             for (int j = 0; j < _width; ++j) {
@@ -85,6 +90,8 @@ struct intArray2D : Array2D {
     void write(int value, int posInHeight, int posInWidth) {
         _dynMas[posInHeight][posInWidth] = value;
     }
+    int _x = 0;
+    int _y = 0;
 private:
     int** _dynMas = 0;
 };
@@ -201,6 +208,9 @@ struct GameBoard {
     void show(int x = 0, int y = 0) {
         Board->print(x, y);
     }
+    void showDebug(int x = 0, int y = 0) { // Для отладки
+        Board->printDebug(x, y);
+    }
     void write(int value, int posInHeight, int posInWidth) {
         Board->write(value, posInHeight, posInWidth);
     }
@@ -212,13 +222,13 @@ private:
 
 struct blockBox {
 
-    blockBox(GameBoard* board, int x = 0, int y = 0) {
+    blockBox(GameBoard* board, int x = 5, int y = 0) {
         _board = board;
         _x = x;
         _y = y;
     }
 
-    void show(int _x, int _y) {
+    void show() {
         gotoxy(_x, _y);
         std::cout << "*";
         _board->write(2, _y, _x);
@@ -231,6 +241,23 @@ struct blockBox {
         gotoxy(_x, --_y);
         std::cout << "*";
         _board->write(2, _y, _x);
+        --_x;
+    }
+
+    void hide() {
+        gotoxy(_x, _y);
+        std::cout << " ";
+        _board->write(0, _y, _x);
+        gotoxy(_x, ++_y);
+        std::cout << " ";
+        _board->write(0, _y, _x);
+        gotoxy(++_x, _y);
+        std::cout << " ";
+        _board->write(0, _y, _x);
+        gotoxy(_x, --_y);
+        std::cout << " ";
+        _board->write(0, _y, _x);
+        --_x;
     }
 
 private:
@@ -249,9 +276,15 @@ int main()
 
     blockBox* Box = new blockBox(myBoard);
 
-    Box->show(5, 5);
+    Box->show();
 
-    myBoard->show(20, 0);
+    myBoard->showDebug(20, 0);
+
+    _getch();
+
+    Box->hide();
+
+    myBoard->showDebug(20, 0);
 
     _getch();
     /*intArray2D* _myArray = new intArray2D(_WIDTH, _HEIGHT);
