@@ -10,7 +10,7 @@
 
 
 
-int _WIDTH = 15;   // Количество столбцов
+int _WIDTH = 16;   // Количество столбцов
 int _HEIGHT = 30;  // Количество строк
 
 COORD _POSITION = { 0, 0 };
@@ -70,6 +70,9 @@ struct intArray2D : Array2D {
                 if (_dynMas[i][j] == 0) {
                     std::cout << " ";
                 }
+                else if (_dynMas[i][j] == 2) {
+                    std::cout << "*";
+                }
                 else {
                     std::cout << _dynMas[i][j];
                 }
@@ -89,6 +92,9 @@ struct intArray2D : Array2D {
     }
     void write(int value, int posInHeight, int posInWidth) {
         _dynMas[posInHeight][posInWidth] = value;
+    }
+    int get(int posInHeight, int posInWidth) {
+        return _dynMas[posInHeight][posInWidth];
     }
     int _x = 0;
     int _y = 0;
@@ -206,6 +212,8 @@ struct GameBoard {
         return GameBoardArray;
     }
     void show(int x = 0, int y = 0) {
+        _x = x;
+        _y = y;
         Board->print(x, y);
     }
     void showDebug(int x = 0, int y = 0) { // Для отладки
@@ -214,8 +222,31 @@ struct GameBoard {
     void write(int value, int posInHeight, int posInWidth) {
         Board->write(value, posInHeight, posInWidth);
     }
+    int get(int posInHeight, int posInWidth) {
+        return Board->get(posInHeight, posInWidth);
+    }
+    void deleteLine(int line) {
+        for (int i = 1; i < _WIDTH - 1; ++i) {
+            this->write(0, line, i);
+        }
+    }
+    const int getHeight() {
+        return _height;
+    }
+    const int getWidth() {
+        return _width;
+    }
+    int getx() {
+        return _x;
+    }
+    int gety() {
+        return _y;
+    }
+    
     intArray2D* Board = 0;
 private:
+    int _x = 0;
+    int _y = 0;
     int _height = 0;
     int _width = 0;
 };
@@ -260,6 +291,82 @@ struct blockBox {
         --_x;
     }
 
+    void moveLeft() {
+        if (!isLeftConflict()) {
+            this->hide();
+            --_x;
+            this->show();
+        }
+    }
+    void moveRight() {
+        if (!isRightConflict()) {
+            this->hide();
+            ++_x;
+            this->show();
+        }
+    }
+    void moveDown() {
+        if (!isDownConflict()) {
+            this->hide();
+            ++_y;
+            this->show();
+        }
+    }
+
+    bool isLeftConflict() {
+        if (_x == _board->getx() + 1) {
+            return true;
+        }
+        return false;
+    }
+    bool isRightConflict() {
+        if (_x == _board->getx() + _WIDTH - 3) {
+            return true;
+        }
+        return false;
+    }
+    bool isDownConflict() { // Проверка границ
+        /*if (_y == _board->gety() + _HEIGHT - 3) {*/
+        if(_board->get(this->gety() + 2, this->getx()) == 1 ||      // Надо оптимизировать // Проверка границ поля
+            _board->get(this->gety() + 2, this->getx() + 1) == 2 || // Проверка столкновения с
+            _board->get(this->gety() + 2, this->getx()) == 2) {     // другими фигурами
+            this->spawn(); // Сброс новой фигуры
+            return true;
+        }
+        return false;
+    }
+    int getx() {
+        return _x;
+    }
+    int gety() {
+        return _y;
+    }
+    void spawn() {
+        this->checkLines();
+        _x = 5;
+        _y = 0;
+        this->show();
+    }
+
+    void checkLines() {
+        int d = 0;
+        //std::cout << "C: " << _board->get(_HEIGHT - 2, _WIDTH - 2);
+        for (int i = 1; i < _HEIGHT; ++i) {
+            d = 0;
+            for (int j = 1; j < _WIDTH; ++j) {
+                if (_board->get(i, j) == 2) {
+                    ++d;
+                    if (d == 14) {
+                        _board->deleteLine(i);
+                    }
+                    /*gotoxy(40, 5);
+                    std::cout << "Counter: " << d;*/
+                }
+
+            }
+        }
+    }
+
 private:
     int _x = 0;
     int _y = 0;
@@ -285,6 +392,43 @@ int main()
     Box->hide();
 
     myBoard->showDebug(20, 0);
+
+    int key = 0;
+
+    while (true) {
+        while (!_kbhit())
+        {
+            Box->moveDown();
+            myBoard->show();
+            myBoard->showDebug(20, 0);
+            Sleep(100);
+        }
+        key = _getch();
+        gotoxy(35, 20);
+        std::cout << key;
+        switch (key)
+        {
+        case 72:
+            break;
+        case 80:
+            Box->moveDown();
+            myBoard->show();
+            myBoard->showDebug(20, 0);
+            break;
+        case 75: 
+            Box->moveLeft();
+            myBoard->show();
+            myBoard->showDebug(20, 0);
+            break;
+        case 77:
+            Box->moveRight();
+            myBoard->show();
+            myBoard->showDebug(20, 0);
+            break;
+        default:
+            break;
+        }
+    }
 
     _getch();
     /*intArray2D* _myArray = new intArray2D(_WIDTH, _HEIGHT);
