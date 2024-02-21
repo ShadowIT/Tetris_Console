@@ -232,6 +232,36 @@ struct GameBoard {
             this->write(0, line, i);
         }
     }
+    void checkLines() {
+        int d = 0;
+        int line_counter = 0;
+        //std::cout << "C: " << _board->get(_HEIGHT - 2, _WIDTH - 2);
+        for (int i = 1; i < _HEIGHT; ++i) {
+            d = 0;
+            for (int j = 1; j < _WIDTH; ++j) {
+                if (this->get(i, j) == 2) {
+                    ++d;
+                    if (d == 14) {
+                        ++line_counter;
+                        this->deleteLine(i);
+                        for (int m = 0; m <= line_counter; ++m) {
+                            for (int k = i; k > 1; --k) {
+                                for (int l = 1; l < _WIDTH; ++l) {
+                                    this->write(this->get(k, l), k + 1, l);
+                                    /* this->showDebug();
+                                     this->show();*/
+                                }
+                            }
+                        }
+                        
+                    }
+                    /*gotoxy(40, 5);
+                    std::cout << "Counter: " << d;*/
+                }
+
+            }
+        }
+    }
     const int getHeight() {
         return _height;
     }
@@ -243,8 +273,7 @@ struct GameBoard {
     }
     int gety() {
         return _y;
-    }
-    
+    }   
     intArray2D* Board = 0;
 private:
     int _x = 0;
@@ -329,13 +358,13 @@ struct blockBox : Block {
     }
 
     bool isLeftConflict() {
-        if (_x == _board->getx() + 1) {
+        if (_x == _board->getx() + 1 || _board->get(_y, _x - 1) == 2 || _board->get(_y + 1, _x - 1) == 2) {
             return true;
         }
         return false;
     }
     bool isRightConflict() {
-        if (_x == _board->getx() + _WIDTH - 3) {
+        if (_x == _board->getx() + _WIDTH - 3 || _board->get(_y, _x + 2) == 2 || _board->get(_y + 1, _x + 2) == 2) {
             return true;
         }
         return false;
@@ -360,28 +389,10 @@ struct blockBox : Block {
         return _y;
     }
     void spawn() {
-        this->checkLines();
+        _board->checkLines();
         _x = 5;
         _y = 0;
         this->show();
-    }
-    void checkLines() {
-        int d = 0;
-        //std::cout << "C: " << _board->get(_HEIGHT - 2, _WIDTH - 2);
-        for (int i = 1; i < _HEIGHT; ++i) {
-            d = 0;
-            for (int j = 1; j < _WIDTH; ++j) {
-                if (_board->get(i, j) == 2) {
-                    ++d;
-                    if (d == 14) {
-                        _board->deleteLine(i);
-                    }
-                    /*gotoxy(40, 5);
-                    std::cout << "Counter: " << d;*/
-                }
-
-            }
-        }
     }
 private:
     int _x = 0;
@@ -589,21 +600,6 @@ struct blockStick : Block {
                 _board->get(this->gety() + 1, this->getx() + 3) == 2 ||
                 _x > _board->getx() + _WIDTH - 5
                 ) {
-
-                //if (_board->get(this->gety() + 5, this->getx()) == 1     ||      // Надо оптимизировать // Проверка границ поля
-                //    _board->get(this->gety() + 5, this->getx()) == 2     ||
-                //    _board->get(this->gety() + 1, this->getx()) == 1     ||
-                //    _board->get(this->gety() + 1, this->getx() + 1) == 1 ||
-                //    _board->get(this->gety() + 1, this->getx() + 2) == 1 ||
-                //    _board->get(this->gety() + 1, this->getx() + 3) == 1 || // Надо оптимизировать // Проверка границ поля
-                //    // Проверка столкновения с
-                //    _board->get(this->gety() + 1, this->getx()) == 2    // ||
-                //    //_board->get(this->gety() + 1, this->getx() + 1) == 2 ||
-                //    //_board->get(this->gety() + 1, this->getx() + 2) == 2 ||
-                //    //_board->get(this->gety() + 1, this->getx() + 3) == 2 ||
-                //    //_x == _board->getx() + 1                             ||
-                //    //_x == _board->getx() + _WIDTH - 3
-                //    ) {
                 return true;
             }
         }        
@@ -616,29 +612,12 @@ struct blockStick : Block {
         return _y;
     }
     void spawn() {
-        this->checkLines();
+        _board->checkLines();
         _x = 5;
         _y = 1;
         this->show();
     }
-    void checkLines() {
-        int d = 0;
-        //std::cout << "C: " << _board->get(_HEIGHT - 2, _WIDTH - 2);
-        for (int i = 1; i < _HEIGHT; ++i) {
-            d = 0;
-            for (int j = 1; j < _WIDTH; ++j) {
-                if (_board->get(i, j) == 2) {
-                    ++d;
-                    if (d == 14) {
-                        _board->deleteLine(i);
-                    }
-                    /*gotoxy(40, 5);
-                    std::cout << "Counter: " << d;*/
-                }
-
-            }
-        }
-    }
+    
 private:
     int _x = 0;
     int _y = 0;
@@ -717,7 +696,7 @@ int main()
 
     //Fig = randomFigure(Box, Stick);
 
-    Fig = Stick;
+    Fig = Box;
 
     while (true) {
         while (!_kbhit())
