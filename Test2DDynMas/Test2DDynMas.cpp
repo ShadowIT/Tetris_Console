@@ -4,6 +4,8 @@
 // Сделать случайный выбор спавнившийся фигуры (Наладить работу функции)
 // Добавить фигуры
 
+// Сделать показа следующей фигуры
+
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <iostream>
@@ -16,8 +18,17 @@
 int _WIDTH = 16;   // Количество столбцов
 int _HEIGHT = 30;  // Количество строк
 
+int _DEMOPOSX = 17;
+int _DEMOPOSY = 3;
+
+int _DEBUGPOSX = 30;
+int _DEBUGPOSY = 0;
+
+int _RandomCh = 0;
+
 COORD _POSITION = { 0, 0 };
 HANDLE _HCONSOLE = GetStdHandle(STD_OUTPUT_HANDLE);
+CONSOLE_CURSOR_INFO structCursorInfo;
 
 void gotoxy(int _x, int _y) {
     _POSITION.X = _x;
@@ -290,6 +301,8 @@ private:
 struct Block {
 
     virtual void show() {}
+    virtual void demoShow(int x_, int y_) {}
+    virtual void demoHide(int x_, int y_) {}
     virtual void hide() {}
     virtual void moveLeft() {}
     virtual void moveRight() {}
@@ -308,6 +321,10 @@ struct blockBox : Block {
         _x = x;
         _y = y;
     }
+    blockBox(int x = 5, int y = 0) {
+        _x = x;
+        _y = y;
+    }
     void show() {
         _board->write(2, _y, _x);
         ++_y;
@@ -317,6 +334,17 @@ struct blockBox : Block {
         --_y;
         _board->write(2, _y, _x);
         --_x;
+    }
+    void demoShow(int x_, int y_) {
+        gotoxy(x_, y_);
+        std::cout << "*";
+        gotoxy(x_, ++y_);
+        std::cout << "*";
+        gotoxy(++x_, y_);
+        std::cout << "*";
+        gotoxy(x_, --y_);
+        std::cout << "*";
+        --x_;
     }
     void hide() {
         /*gotoxy(_x, _y);
@@ -335,6 +363,17 @@ struct blockBox : Block {
         --_y;
         _board->write(0, _y, _x);
         --_x;
+    }
+    void demoHide(int x_, int y_) {
+        gotoxy(x_, y_);
+        std::cout << " ";
+        gotoxy(x_, ++y_);
+        std::cout << " ";
+        gotoxy(++x_, y_);
+        std::cout << " ";
+        gotoxy(x_, --y_);
+        std::cout << " ";
+        --x_;
     }
 
     void moveLeft() {
@@ -396,7 +435,7 @@ struct blockBox : Block {
     virtual void spawn() {
         _board->checkLines();
         _x = 5;
-        _y = 0;
+        _y = 1;
         this->show();
         gotoxy(45, 25);
         std::cout << "Box";
@@ -414,6 +453,10 @@ private:
 struct blockStick : Block {
     blockStick(GameBoard* board, int x = 5, int y = 0) {
         _board = board;
+        _x = x;
+        _y = y;
+    }
+    blockStick(int x = 5, int y = 0) {
         _x = x;
         _y = y;
     }
@@ -456,6 +499,30 @@ struct blockStick : Block {
             _x -= 3;
             //--_y;
         }
+    }
+    void demoShow(int x_, int y_) {
+        //if (!_rotate) {
+            gotoxy(x_, ++y_);
+            std::cout << "*";
+            gotoxy(x_, ++y_);
+            std::cout << "*";
+            gotoxy(x_, ++y_);
+            std::cout << "*";
+            gotoxy(x_, ++y_);
+            std::cout << "*";
+            _y -= 4;
+        //}
+        /*else {
+            gotoxy(++_x, _y);
+            std::cout << "*";
+            gotoxy(++_x, _y);
+            std::cout << "*";
+            gotoxy(++_x, _y);
+            std::cout << "*";
+            gotoxy(++_x, _y);
+            std::cout << "*";
+            _x -= 3;
+        }*/
     }
     void hide() {
         //for (int i = 0; i < 4; ++i) {
@@ -505,6 +572,18 @@ struct blockStick : Block {
             _x -= 3;
             //--_y;
         }
+    }
+
+    void demoHide(int x_, int y_) {
+        gotoxy(x_, ++y_);
+        std::cout << " ";
+        gotoxy(x_, ++y_);
+        std::cout << " ";
+        gotoxy(x_, ++y_);
+        std::cout << " ";
+        gotoxy(x_, ++y_);
+        std::cout << " ";
+        _y -= 4;
     }
 
     void moveLeft() {
@@ -683,7 +762,11 @@ Block* randomFigure(Block* box, Block* stick) {
 
 int main()
 {
-    
+
+    GetConsoleCursorInfo(_HCONSOLE, &structCursorInfo);
+    structCursorInfo.bVisible = FALSE;
+    SetConsoleCursorInfo(_HCONSOLE, &structCursorInfo); // Отключение курсора в консоли
+
     GameBoard* myBoard = new GameBoard(_HEIGHT, _WIDTH);
 
     myBoard->show();
@@ -692,13 +775,19 @@ int main()
 
     Block* Stick = new blockStick(myBoard);
 
+    Block* DemoBox = new blockBox(myBoard);
+
+    Block* DemoStick = new blockStick(myBoard);
+
     //Box->show();
 
     //Stick->show();
 
-    myBoard->showDebug(20, 0);
+    myBoard->showDebug(_DEBUGPOSX, _DEBUGPOSY);
 
     Block* Fig = 0;
+
+    Block* NextFig = 0;
 
     //_getch();
 
@@ -714,26 +803,51 @@ int main()
 
     //Fig = Box;
 
+    bool _nextFig = true;
+
+    NextFig = randomFigure(Box, Stick);
+
+    gotoxy(_DEMOPOSX, _DEMOPOSY);
+    std::cout << "Next fig";
+
     while (true) {
         while (!_kbhit())
         {
             //Box->moveDown();
             //Stick->moveDown();
+
             if (Fig->isDownConflict()) {
                 
-                Fig = 0;
+                //Fig = 0;
 
                 Fig = randomFigure(Box, Stick);
                 //((Block*)Fig)->spawn();
                 //Sleep(300);
+                _nextFig = true;
                 Fig->spawn();
                 //break;
             }
             else {
                 Fig->moveDown();
             }
+
+            if (_nextFig) {
+                //NextFig = 0;
+                NextFig->demoHide(_DEMOPOSX + 3, _DEMOPOSY + 2);
+                if (_RandomCh >= 0 && _RandomCh < 50) {
+                    NextFig->demoShow(_DEMOPOSX + 3, _DEMOPOSY + 2);
+                }
+                else {
+                    NextFig->demoShow(_DEMOPOSX + 3, _DEMOPOSY + 2);
+                }
+                NextFig->demoHide(_DEMOPOSX + 3, _DEMOPOSY + 2);
+                NextFig = randomFigure(Box, Stick);
+                NextFig->demoShow(_DEMOPOSX + 3, _DEMOPOSY + 2);
+                _nextFig = false;
+            }
+
             myBoard->show();
-            myBoard->showDebug(20, 0);
+            myBoard->showDebug(_DEBUGPOSX, _DEBUGPOSY);
             Sleep(100);
         }
         key = _getch();
@@ -753,21 +867,21 @@ int main()
             }*/
             Fig->moveDown();
             myBoard->show();
-            myBoard->showDebug(20, 0);
+            myBoard->showDebug(_DEBUGPOSX, _DEBUGPOSY);
             break;
         case 75: 
             //Box->moveLeft();
             //Stick->moveLeft();
             Fig->moveLeft();
             myBoard->show();
-            myBoard->showDebug(20, 0);
+            myBoard->showDebug(_DEBUGPOSX, _DEBUGPOSY);
             break;
         case 77:
             //Box->moveRight();
             //Stick->moveRight();
             Fig->moveRight();
             myBoard->show();
-            myBoard->showDebug(20, 0);
+            myBoard->showDebug(_DEBUGPOSX, _DEBUGPOSY);
             break;
         default:
             break;
