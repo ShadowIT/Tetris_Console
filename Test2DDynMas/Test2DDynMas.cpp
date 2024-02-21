@@ -260,8 +260,11 @@ struct Block {
     virtual void moveLeft() {}
     virtual void moveRight() {}
     virtual void moveDown() {}
+    virtual void moveRotate() {}
     virtual void spawn() {}
-    virtual bool isDownConflict() { }
+    virtual bool isDownConflict() { 
+        return false;
+    }
 
 };
 
@@ -272,32 +275,30 @@ struct blockBox : Block {
         _y = y;
     }
     void show() {
-        gotoxy(_x, _y);
-        std::cout << "*";
         _board->write(2, _y, _x);
-        gotoxy(_x, ++_y);
-        std::cout << "*";
+        ++_y;
         _board->write(2, _y, _x);
-        gotoxy(++_x, _y);
-        std::cout << "*";
+        ++_x;
         _board->write(2, _y, _x);
-        gotoxy(_x, --_y);
-        std::cout << "*";
+        --_y;
         _board->write(2, _y, _x);
         --_x;
     }
     void hide() {
-        gotoxy(_x, _y);
-        std::cout << " ";
+        /*gotoxy(_x, _y);
+        std::cout << " ";*/
         _board->write(0, _y, _x);
-        gotoxy(_x, ++_y);
-        std::cout << " ";
+        /*gotoxy(_x, ++_y);
+        std::cout << " ";*/
+        ++_y;
         _board->write(0, _y, _x);
-        gotoxy(++_x, _y);
-        std::cout << " ";
+        /*gotoxy(++_x, _y);
+        std::cout << " ";*/
+        ++_x;
         _board->write(0, _y, _x);
-        gotoxy(_x, --_y);
-        std::cout << " ";
+       /* gotoxy(_x, --_y);
+        std::cout << " ";*/
+        --_y;
         _board->write(0, _y, _x);
         --_x;
     }
@@ -322,6 +323,9 @@ struct blockBox : Block {
             ++_y;
             this->show();
         }
+    }
+    void moveRotate() {
+       
     }
 
     bool isLeftConflict() {
@@ -338,9 +342,12 @@ struct blockBox : Block {
     }
     bool isDownConflict() { // Проверка границ
         /*if (_y == _board->gety() + _HEIGHT - 3) {*/
+        
         if(_board->get(this->gety() + 2, this->getx()) == 1 ||      // Надо оптимизировать // Проверка границ поля
             _board->get(this->gety() + 2, this->getx() + 1) == 2 || // Проверка столкновения с
             _board->get(this->gety() + 2, this->getx()) == 2) {     // другими фигурами
+            gotoxy(45, 15);
+            std::cout << "Box conflict";
             this->spawn(); // Сброс новой фигуры
             return true;
         }
@@ -358,7 +365,6 @@ struct blockBox : Block {
         _y = 0;
         this->show();
     }
-
     void checkLines() {
         int d = 0;
         //std::cout << "C: " << _board->get(_HEIGHT - 2, _WIDTH - 2);
@@ -377,12 +383,10 @@ struct blockBox : Block {
             }
         }
     }
-
 private:
     int _x = 0;
     int _y = 0;
     GameBoard* _board = 0;
-
 };
 
 struct blockStick : Block {
@@ -392,20 +396,44 @@ struct blockStick : Block {
         _y = y;
     }
     void show() {
-        //for (int i = 0; i < 4; ++i) {
+        if (!_rotate) {
+            //for (int i = 0; i < 4; ++i) {
 
-        //    gotoxy(_x, _y + i);
-        //    //std::cout << "*";
-        //    _board->write(2, _y + 1, _x);
+            //    gotoxy(_x, _y + i);
+            //    //std::cout << "*";
+            //    _board->write(2, _y + 1, _x);
 
-        //}
-        gotoxy(_x, ++_y);
-        _board->write(2, _y, _x);
-        gotoxy(_x, ++_y);
-        _board->write(2, _y, _x);
-        gotoxy(_x, ++_y);
-        _board->write(2, _y, _x);
-        _y -= 3;
+            //}
+            //gotoxy(_x, ++_y);
+            ++_y;
+            _board->write(2, _y, _x);
+            //gotoxy(_x, ++_y);
+            ++_y;
+            _board->write(2, _y, _x);
+            //gotoxy(_x, ++_y);
+            ++_y;
+            _board->write(2, _y, _x);
+            //gotoxy(_x, ++_y);
+            ++_y;
+            _board->write(2, _y, _x);
+            _y -= 4;
+        }
+        else {
+            //gotoxy(--_x, ++_y);
+            //++_y;
+            _board->write(2, _y, _x);
+            //gotoxy(++_x, _y);
+            ++_x;
+            _board->write(2, _y, _x);
+            //gotoxy(++_x, _y);
+            ++_x;
+            _board->write(2, _y, _x);
+            //gotoxy(++_x, _y);
+            ++_x;
+            _board->write(2, _y, _x);
+            _x -= 3;
+            //--_y;
+        }
     }
     void hide() {
         //for (int i = 0; i < 4; ++i) {
@@ -415,13 +443,46 @@ struct blockStick : Block {
         //    _board->write(0, _y, _x);
 
         //}
-        gotoxy(_x, ++_y);
-        _board->write(0, _y, _x);
-        gotoxy(_x, ++_y);
-        _board->write(0, _y, _x);
-        gotoxy(_x, ++_y);
-        _board->write(0, _y, _x);
-        _y -= 3;
+        if (!_rotate) {
+            //for (int i = 0; i < 4; ++i) {
+
+            //    gotoxy(_x, _y + i);
+            //    //std::cout << "*";
+            //    _board->write(2, _y + 1, _x);
+
+            //}
+            //gotoxy(_x, ++_y);
+            ++_y;
+            _board->write(0, _y, _x);
+            //gotoxy(_x, ++_y);
+            ++_y;
+            _board->write(0, _y, _x);
+            //gotoxy(_x, ++_y);
+            ++_y;
+            _board->write(0, _y, _x);
+            //gotoxy(_x, ++_y);
+            ++_y;
+            _board->write(0, _y, _x);
+            _y -= 4;
+        }
+        else {
+            //gotoxy(++_x, ++_y);
+            /*++_x;
+            ++_y;*/
+            //++_y;
+            _board->write(0, _y, _x);
+            //gotoxy(++_x, _y);
+            ++_x;
+            _board->write(0, _y, _x);
+            //gotoxy(++_x, _y);
+            ++_x;
+            _board->write(0, _y, _x);
+            //gotoxy(++_x, _y);
+            ++_x;
+            _board->write(0, _y, _x);
+            _x -= 3;
+            //--_y;
+        }
     }
 
     void moveLeft() {
@@ -445,6 +506,13 @@ struct blockStick : Block {
             this->show();
         }
     }
+    void moveRotate() {
+        if (!isRotateConflict()) {
+            this->hide();
+            _rotate = bool(1 - _rotate);
+            this->show();
+        }
+    }
 
     bool isLeftConflict() {
         if (_x == _board->getx() + 1) {
@@ -453,21 +521,92 @@ struct blockStick : Block {
         return false;
     }
     bool isRightConflict() {
-        if (_x == _board->getx() + _WIDTH - 2) {
-            return true;
+        if (!_rotate) {
+            if (_x == _board->getx() + _WIDTH - 2) {
+                return true;
+            }
+        }
+        else {
+            if (_x == _board->getx() + _WIDTH - 5) {
+                return true;
+            }
         }
         return false;
     }
     bool isDownConflict() { // Проверка границ
-        int r = 0;
+        //int r = 0;
         /*if (_y == _board->gety() + _HEIGHT - 3) {*/
-        if (_board->get(this->gety() + 4, this->getx()) == 1 ||      // Надо оптимизировать // Проверка границ поля
-                                                                     // Проверка столкновения с
-            _board->get(this->gety() + 4, this->getx()) == 2) { 
-            // другими фигурами
-            this->spawn(); // Сброс новой фигуры
-            return true;
+        if (!_rotate) {
+            if (_board->get(this->gety() + 5, this->getx()) == 1 ||      // Надо оптимизировать // Проверка границ поля
+                // Проверка столкновения с
+                _board->get(this->gety() + 5, this->getx()) == 2) {
+                // другими фигурами
+                this->spawn(); // Сброс новой фигуры
+                return true;
+            }
+            return false;
         }
+        else {
+            if (_board->get(this->gety() + 1, this->getx()) == 1     || 
+                _board->get(this->gety() + 1, this->getx() + 1) == 1 ||
+                _board->get(this->gety() + 1, this->getx() + 2) == 1 ||
+                _board->get(this->gety() + 1, this->getx() + 3) == 1 || // Надо оптимизировать // Проверка границ поля
+                                                                        // Проверка столкновения с
+                _board->get(this->gety() + 1, this->getx()) == 2     ||
+                _board->get(this->gety() + 1, this->getx() + 1) == 2 ||
+                _board->get(this->gety() + 1, this->getx() + 2) == 2 ||
+                _board->get(this->gety() + 1, this->getx() + 3) == 2
+                ) {
+                                                                        // другими фигурами
+                this->spawn(); // Сброс новой фигуры
+                return true;
+            }
+            return false;
+        }
+    }
+    bool isRotateConflict() { // Проверка границ
+        
+        if (!_rotate) {
+            if (_board->get(this->gety() + 5, this->getx()) == 1 ||      // Надо оптимизировать // Проверка границ поля
+                // Проверка столкновения с
+                _board->get(this->gety() + 5, this->getx()) == 2 ||
+                _x > _board->getx() + _WIDTH - 5
+                ) {
+                // другими фигурами
+                return true;
+            }
+            return false;
+        }
+        else {
+            if (_board->get(this->gety() + 1, this->getx()) == 1 ||
+                _board->get(this->gety() + 1, this->getx() + 1) == 1 ||
+                _board->get(this->gety() + 1, this->getx() + 2) == 1 ||
+                _board->get(this->gety() + 1, this->getx() + 3) == 1 || // Надо оптимизировать // Проверка границ поля
+                // Проверка столкновения с
+                _board->get(this->gety() + 1, this->getx()) == 2 ||
+                _board->get(this->gety() + 1, this->getx() + 1) == 2 ||
+                _board->get(this->gety() + 1, this->getx() + 2) == 2 ||
+                _board->get(this->gety() + 1, this->getx() + 3) == 2 ||
+                _x > _board->getx() + _WIDTH - 5
+                ) {
+
+                //if (_board->get(this->gety() + 5, this->getx()) == 1     ||      // Надо оптимизировать // Проверка границ поля
+                //    _board->get(this->gety() + 5, this->getx()) == 2     ||
+                //    _board->get(this->gety() + 1, this->getx()) == 1     ||
+                //    _board->get(this->gety() + 1, this->getx() + 1) == 1 ||
+                //    _board->get(this->gety() + 1, this->getx() + 2) == 1 ||
+                //    _board->get(this->gety() + 1, this->getx() + 3) == 1 || // Надо оптимизировать // Проверка границ поля
+                //    // Проверка столкновения с
+                //    _board->get(this->gety() + 1, this->getx()) == 2    // ||
+                //    //_board->get(this->gety() + 1, this->getx() + 1) == 2 ||
+                //    //_board->get(this->gety() + 1, this->getx() + 2) == 2 ||
+                //    //_board->get(this->gety() + 1, this->getx() + 3) == 2 ||
+                //    //_x == _board->getx() + 1                             ||
+                //    //_x == _board->getx() + _WIDTH - 3
+                //    ) {
+                return true;
+            }
+        }        
         return false;
     }
     int getx() {
@@ -479,10 +618,9 @@ struct blockStick : Block {
     void spawn() {
         this->checkLines();
         _x = 5;
-        _y = 0;
+        _y = 1;
         this->show();
     }
-
     void checkLines() {
         int d = 0;
         //std::cout << "C: " << _board->get(_HEIGHT - 2, _WIDTH - 2);
@@ -501,24 +639,40 @@ struct blockStick : Block {
             }
         }
     }
-
-    
-
 private:
     int _x = 0;
     int _y = 0;
+    bool _rotate = false;
     GameBoard* _board = 0;
-
 };
+
+int random(int a, int b)
+{
+    srand(time(NULL));
+    if (a > 0) return a + rand() % (b - a);
+    else return a + rand() % (abs(a) + b);
+}
 
 Block* randomFigure(Block* box, Block* stick) {
 
     int start = 0;
-    int end = 1;
+    int end = 100;
 
-    int r = rand() % (end - start + 1) + start;
+    //int r = rand() % (end - start + 1) + start;
 
-    switch (r)
+    int r = random(0, 100);
+
+    gotoxy(45, 10);
+    std::cout << "Random: " << r;
+
+    if (r >= 0 && r < 50) {
+        return box;
+    }
+    else {
+        return stick;
+    }
+
+    /*switch (r)
     {
     case 0:
         return box;
@@ -527,9 +681,9 @@ Block* randomFigure(Block* box, Block* stick) {
         return stick;
         break;
     default:
+        return box;
         break;
-    }
-
+    }*/
 }
 
 int main()
@@ -561,13 +715,22 @@ int main()
 
     int key = 0;
 
-    Fig = randomFigure(Box, Stick);
+    //Fig = randomFigure(Box, Stick);
+
+    Fig = Stick;
 
     while (true) {
         while (!_kbhit())
         {
             //Box->moveDown();
             //Stick->moveDown();
+            //if (Fig->isDownConflict()) {
+            //    
+            //    Fig = randomFigure(Box, Stick);
+            //    //Sleep(300);
+            //    Fig->spawn();
+            //    //break;
+            //}
             Fig->moveDown();
             myBoard->show();
             myBoard->showDebug(20, 0);
@@ -579,14 +742,15 @@ int main()
         switch (key)
         {
         case 72:
+            Fig->moveRotate();
             break;
         case 80:
             //Box->moveDown();
             //Stick->moveDown();
-            if (Fig->isDownConflict()) {
+            /*if (Fig->isDownConflict()) {
                 Fig = randomFigure(Box, Stick);
                 Fig->spawn();
-            }
+            }*/
             Fig->moveDown();
             myBoard->show();
             myBoard->showDebug(20, 0);
