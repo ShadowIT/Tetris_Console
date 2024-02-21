@@ -1,7 +1,8 @@
 ﻿// Test2DDynMas.cpp : Этот файл содержит функцию "main". Здесь начинается и заканчивается выполнение программы.
 //
 
-// Сделать случайный выбор спавнившийся фигуры
+// Сделать случайный выбор спавнившийся фигуры (Наладить работу функции)
+// Добавить фигуры
 
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -235,6 +236,7 @@ struct GameBoard {
     void checkLines() {
         int d = 0;
         int line_counter = 0;
+        int line = 0;
         //std::cout << "C: " << _board->get(_HEIGHT - 2, _WIDTH - 2);
         for (int i = 1; i < _HEIGHT; ++i) {
             d = 0;
@@ -243,22 +245,25 @@ struct GameBoard {
                     ++d;
                     if (d == 14) {
                         ++line_counter;
+                        line = i;
                         this->deleteLine(i);
-                        for (int m = 0; m <= line_counter; ++m) {
-                            for (int k = i; k > 1; --k) {
-                                for (int l = 1; l < _WIDTH; ++l) {
-                                    this->write(this->get(k, l), k + 1, l);
-                                    /* this->showDebug();
-                                     this->show();*/
-                                }
-                            }
-                        }
                         
                     }
                     /*gotoxy(40, 5);
                     std::cout << "Counter: " << d;*/
                 }
 
+            }
+        }
+        for (int m = 0; m < line_counter; ++m) {
+            for (int k = line; k > 1; --k) {
+                for (int l = 1; l < _WIDTH; ++l) {
+                    //if (this->get(k, l) == 0) {
+                        this->write(this->get(k - 1, l), k, l);
+                        /*this->showDebug();
+                        this->show();*/
+                    //}
+                }
             }
         }
     }
@@ -377,7 +382,7 @@ struct blockBox : Block {
             _board->get(this->gety() + 2, this->getx()) == 2) {     // другими фигурами
             gotoxy(45, 15);
             std::cout << "Box conflict";
-            this->spawn(); // Сброс новой фигуры
+            //this->spawn(); // Сброс новой фигуры
             return true;
         }
         return false;
@@ -388,11 +393,17 @@ struct blockBox : Block {
     int gety() {
         return _y;
     }
-    void spawn() {
+    virtual void spawn() {
         _board->checkLines();
         _x = 5;
         _y = 0;
         this->show();
+        gotoxy(45, 25);
+        std::cout << "Box";
+        //Sleep(3000);
+        gotoxy(45, 25);
+        std::cout << "     ";
+
     }
 private:
     int _x = 0;
@@ -552,7 +563,7 @@ struct blockStick : Block {
                 // Проверка столкновения с
                 _board->get(this->gety() + 5, this->getx()) == 2) {
                 // другими фигурами
-                this->spawn(); // Сброс новой фигуры
+               // this->spawn(); // Сброс новой фигуры
                 return true;
             }
             return false;
@@ -611,11 +622,16 @@ struct blockStick : Block {
     int gety() {
         return _y;
     }
-    void spawn() {
+    virtual void spawn() {
         _board->checkLines();
         _x = 5;
         _y = 1;
         this->show();
+        gotoxy(45, 30);
+        std::cout << "Stick";
+        //Sleep(3000);
+        gotoxy(45, 30);
+        std::cout << "     ";
     }
     
 private:
@@ -690,27 +706,32 @@ int main()
 
     //Stick->hide();
 
-    myBoard->showDebug(20, 0);
+    //myBoard->showDebug(20, 0);
 
     int key = 0;
 
-    //Fig = randomFigure(Box, Stick);
+    Fig = randomFigure(Box, Stick);
 
-    Fig = Box;
+    //Fig = Box;
 
     while (true) {
         while (!_kbhit())
         {
             //Box->moveDown();
             //Stick->moveDown();
-            //if (Fig->isDownConflict()) {
-            //    
-            //    Fig = randomFigure(Box, Stick);
-            //    //Sleep(300);
-            //    Fig->spawn();
-            //    //break;
-            //}
-            Fig->moveDown();
+            if (Fig->isDownConflict()) {
+                
+                Fig = 0;
+
+                Fig = randomFigure(Box, Stick);
+                //((Block*)Fig)->spawn();
+                //Sleep(300);
+                Fig->spawn();
+                //break;
+            }
+            else {
+                Fig->moveDown();
+            }
             myBoard->show();
             myBoard->showDebug(20, 0);
             Sleep(100);
