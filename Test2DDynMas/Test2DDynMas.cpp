@@ -21,6 +21,12 @@ int _HEIGHT = 30;  // Количество строк
 int _DEMOPOSX = 17;
 int _DEMOPOSY = 3;
 
+int _GAMEBOARDPOSX = 0;
+int _GAMEBOARDPOSY = 0;
+
+int _MENUPOSX = 16;
+int _MENUPOSY = 7;
+
 int _DEBUGPOSX = 30;
 int _DEBUGPOSY = 0;
 
@@ -79,10 +85,9 @@ struct intArray2D : Array2D {
         }
     }
     void print(int x = 0, int y = 0) { // Вывод в консоль двумерного динамического массива размерностью width * height типа Int
-        //std::cout << std::endl;
         for (int i = 0; i < _height; ++i) {
             for (int j = 0; j < _width; ++j) {
-                gotoxy(j, i);
+                gotoxy(x + j, y + i);
                 if (_dynMas[i][j] == 0) {
                     std::cout << " ";
                 }
@@ -93,7 +98,6 @@ struct intArray2D : Array2D {
                     std::cout << _dynMas[i][j];
                 }
             }
-            //std::cout << std::endl;
         }
     }
     void printDebug(int x = 0, int y = 0) { // Вывод в консоль двумерного динамического массива размерностью width * height типа Int
@@ -230,7 +234,7 @@ struct GameBoard {
     void show(int x = 0, int y = 0) {
         _x = x;
         _y = y;
-        Board->print(x, y);
+        Board->print(_x, _y);
     }
     void showDebug(int x = 0, int y = 0) { // Для отладки
         Board->printDebug(x, y);
@@ -726,7 +730,7 @@ struct Menu {
 
     Menu(int x = 0, int y = 0) {
         _x = x;
-        _y = 0;
+        _y = y;
         _menu = new int[3];
         for (int i = 0; i < 3; ++i) {   //Инициализация массива меню
             _menu[i] = 0;
@@ -734,16 +738,16 @@ struct Menu {
         _menu[0] = 1;
     }
     void show() {
-        for (int i = 1; i < 15; ++i) {
+        for (int i = 1; i < 13; ++i) {
             gotoxy(_x + i, _y);
             std::cout << "-";
         }
         for (int i = 1; i < 10; ++i) {
-            gotoxy(_x + 15, _y + i);
+            gotoxy(_x + 13, _y + i);
             std::cout << "|";
         }
-        for (int i = 1; i < 15; ++i) {
-            gotoxy(_x + 15 - i, _y + 10);
+        for (int i = 1; i < 13; ++i) {
+            gotoxy(_x + 13 - i, _y + 10);
             std::cout << "-";
         }
         for (int i = 1; i < 10; ++i) {
@@ -751,10 +755,37 @@ struct Menu {
             std::cout << "|";
         }
         int k = 0;
-        //gotoxy(_x + 5, _y + 2);
-        for (int i = 0; i < 3; ++i) {   //Инициализация массива меню
-            gotoxy(_x + 5, _y + 2 + i + k);
-            std::cout << _menu[i];
+        for (int i = 0; i < 3; ++i) {   
+            gotoxy(_x + 2, _y + 3 + i + k);
+            switch (i)
+            {
+            case 0: 
+                if (_menu[i] == 1) {
+                    std::cout << "*" << " Play";
+                }
+                else {
+                    std::cout << " " << " Play";
+                }
+                break;
+            case 1:
+                if (_menu[i] == 1) {
+                    std::cout << "*" << " Settings";
+                }
+                else {
+                    std::cout << " " << " Settings";
+                }
+                break;
+            case 2:
+                if (_menu[i] == 1) {
+                    std::cout << "*" << " Exit";
+                }
+                else {
+                    std::cout << " " << " Exit";
+                }
+                break;
+            default:
+                break;
+            }
             ++k;
         }
     }
@@ -767,9 +798,7 @@ struct Menu {
     }
     void moveUp() {
         int temp = 0;
-
         int pos = checkPosition();
-       
         if ((_menu[pos] == 1) && (pos == 0)) {
             _menu[pos] = 0;
             _menu[2] = 1;
@@ -778,29 +807,10 @@ struct Menu {
             _menu[pos] = 0;
             _menu[pos - 1] = 1;
         }
-
-        
-
-        /*for (int i = 0; i < 3; ++i) {  
-            if ((_menu[i] == 1) && (i == 0)) {
-                _menu[i] = 0;                
-                _menu[2] = 1;
-                break;
-            }
-            else {
-                if (i > 0) {
-                    temp = _menu[i - 1];
-                    _menu[i - 1] = _menu[i];
-                    _menu[i] = temp;
-                }
-            }
-        }*/
     }
     void moveDown() {
         int temp = 0;
-
         int pos = checkPosition();
-
         if ((_menu[pos] == 1) && (pos == 2)) {
             _menu[pos] = 0;
             _menu[0] = 1;
@@ -809,27 +819,11 @@ struct Menu {
             _menu[pos] = 0;
             _menu[pos + 1] = 1;
         }
-        
-        /*for (int i = 0; i < 3; ++i) {   
-            if ((_menu[i] == 1) && (i == 2)) {
-                _menu[i] = 0;
-                _menu[0] = 1;
-                break;
-            }
-            else {
-                if (i < 2) {
-                    temp = _menu[i];
-                    _menu[i ] = _menu[i + 1];
-                    _menu[i + 1] = temp;
-                }
-            }
-        }*/
     }
-    int* _menu = 0;
 private:
     int _x = 0;
     int _y = 0;
-    //int* _menu = 0;
+    int* _menu = 0;
 };
 
 int random(int a, int b)
@@ -875,13 +869,11 @@ Block* randomFigure(Block* box, Block* stick) {
 int main()
 {
 
-    GetConsoleCursorInfo(_HCONSOLE, &structCursorInfo);
-    structCursorInfo.bVisible = FALSE;
+    GetConsoleCursorInfo(_HCONSOLE, &structCursorInfo); // 
+    structCursorInfo.bVisible = FALSE;                  // 
     SetConsoleCursorInfo(_HCONSOLE, &structCursorInfo); // Отключение курсора в консоли
 
     GameBoard* myBoard = new GameBoard(_HEIGHT, _WIDTH);
-
-    //myBoard->show();
 
     Block* Box = new blockBox(myBoard);
 
@@ -891,64 +883,59 @@ int main()
 
     Block* DemoStick = new blockStick(myBoard);
 
-    Menu* myMenu = new Menu(20, 20);
-
-    //Box->show();
-
-    //Stick->show();
-
-    //myBoard->showDebug(_DEBUGPOSX, _DEBUGPOSY);
+    Menu* myMenu = new Menu(_MENUPOSX, _MENUPOSY);
 
     Block* Fig = 0;
 
     Block* NextFig = 0;
 
-    //_getch();
-
-    //Box->hide();
-
-    //Stick->hide();
-
-    //myBoard->showDebug(20, 0);
-
     int key = 0;
 
     int key_menu = 0;
 
-    Fig = randomFigure(Box, Stick);
+    Fig = randomFigure(Box, Stick);         // Определение случайной следующей фигуры
+                                            // 
+    //Fig = Box;                            // 
 
-    //Fig = Box;
+    bool _nextFig = true;                   //
 
-    bool _nextFig = true;
+    NextFig = randomFigure(Box, Stick);     //
 
-    NextFig = randomFigure(Box, Stick);
-
-    /*gotoxy(_DEMOPOSX, _DEMOPOSY);
-    std::cout << "Next fig";*/
-
-    //myMenu->show();
+    /*gotoxy(_DEMOPOSX, _DEMOPOSY);         //
+    std::cout << "Next fig";*/              //
 
     while (true) {
         while (_MenuFlag) {
             myMenu->show();
             key_menu = _getch();
-            gotoxy(20, 20);
-            std::cout << "     ";
-            std::cout << key_menu;
             switch (key_menu)
             {
             case 72:
                 myMenu->moveUp();
-                //myMenu->show();
                 break;
             case 80:
                 myMenu->moveDown();
-                //myMenu->show();
+                break;
+            case 13:
+                switch (myMenu->checkPosition())
+                {
+                case 0:                 // Play
+                    _MenuFlag = false;
+                    break;
+                case 1:                 // Settings
+                    break;
+                case 2:                 // Exit
+                    return 0;
+                    break;
+                default:
+                    break;
+                }
                 break;
             default:
                 break;
             }
         }
+        system("Cls");
         while (!_kbhit())
         {
             //Box->moveDown();
@@ -984,58 +971,40 @@ int main()
             //    _nextFig = false;
             //}
 
-            myBoard->show();
+            myBoard->show(_GAMEBOARDPOSX, _GAMEBOARDPOSY);
             myBoard->showDebug(_DEBUGPOSX, _DEBUGPOSY);
             Sleep(100);
         }
         key = _getch();
-        /*gotoxy(55, 20);
-        std::cout << key;*/
+        gotoxy(55, 20);
+        std::cout << key;
         switch (key)
         {
         case 72:
             Fig->moveRotate();
             break;
-        case 80:
-            //Box->moveDown();
-            //Stick->moveDown();
-            /*if (Fig->isDownConflict()) {
-                Fig = randomFigure(Box, Stick);
-                Fig->spawn();
-            }*/
+        case 80:  
             Fig->moveDown();
-            myBoard->show();
             myBoard->showDebug(_DEBUGPOSX, _DEBUGPOSY);
             break;
         case 75: 
-            //Box->moveLeft();
-            //Stick->moveLeft();
             Fig->moveLeft();
-            myBoard->show();
             myBoard->showDebug(_DEBUGPOSX, _DEBUGPOSY);
             break;
         case 77:
-            //Box->moveRight();
-            //Stick->moveRight();
             Fig->moveRight();
-            myBoard->show();
             myBoard->showDebug(_DEBUGPOSX, _DEBUGPOSY);
             break;
-        case 274:
+        case 27:
+            _MenuFlag = true;
             break;
         default:
             break;
         }
     }
 
-    _getch();
-    /*intArray2D* _myArray = new intArray2D(_WIDTH, _HEIGHT);
+    //_getch();
     
-    _myArray->print();
-    
-    
-
-    delete _myArray;*/
 
     return 0;
 
