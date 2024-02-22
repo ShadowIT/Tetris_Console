@@ -26,6 +26,8 @@ int _DEBUGPOSY = 0;
 
 int _RandomCh = 0;
 
+bool _MenuFlag = true; // Флаг вызова меню
+
 COORD _POSITION = { 0, 0 };
 HANDLE _HCONSOLE = GetStdHandle(STD_OUTPUT_HANDLE);
 CONSOLE_CURSOR_INFO structCursorInfo;
@@ -720,6 +722,116 @@ private:
     GameBoard* _board = 0;
 };
 
+struct Menu {
+
+    Menu(int x = 0, int y = 0) {
+        _x = x;
+        _y = 0;
+        _menu = new int[3];
+        for (int i = 0; i < 3; ++i) {   //Инициализация массива меню
+            _menu[i] = 0;
+        }
+        _menu[0] = 1;
+    }
+    void show() {
+        for (int i = 1; i < 15; ++i) {
+            gotoxy(_x + i, _y);
+            std::cout << "-";
+        }
+        for (int i = 1; i < 10; ++i) {
+            gotoxy(_x + 15, _y + i);
+            std::cout << "|";
+        }
+        for (int i = 1; i < 15; ++i) {
+            gotoxy(_x + 15 - i, _y + 10);
+            std::cout << "-";
+        }
+        for (int i = 1; i < 10; ++i) {
+            gotoxy(_x, _y - i + 10);
+            std::cout << "|";
+        }
+        int k = 0;
+        //gotoxy(_x + 5, _y + 2);
+        for (int i = 0; i < 3; ++i) {   //Инициализация массива меню
+            gotoxy(_x + 5, _y + 2 + i + k);
+            std::cout << _menu[i];
+            ++k;
+        }
+    }
+    int checkPosition() {
+        for (int i = 0; i < 3; ++i) {   
+            if (_menu[i] == 1) {
+                return i;
+            }
+        }
+    }
+    void moveUp() {
+        int temp = 0;
+
+        int pos = checkPosition();
+       
+        if ((_menu[pos] == 1) && (pos == 0)) {
+            _menu[pos] = 0;
+            _menu[2] = 1;
+        }
+        else {
+            _menu[pos] = 0;
+            _menu[pos - 1] = 1;
+        }
+
+        
+
+        /*for (int i = 0; i < 3; ++i) {  
+            if ((_menu[i] == 1) && (i == 0)) {
+                _menu[i] = 0;                
+                _menu[2] = 1;
+                break;
+            }
+            else {
+                if (i > 0) {
+                    temp = _menu[i - 1];
+                    _menu[i - 1] = _menu[i];
+                    _menu[i] = temp;
+                }
+            }
+        }*/
+    }
+    void moveDown() {
+        int temp = 0;
+
+        int pos = checkPosition();
+
+        if ((_menu[pos] == 1) && (pos == 2)) {
+            _menu[pos] = 0;
+            _menu[0] = 1;
+        }
+        else {
+            _menu[pos] = 0;
+            _menu[pos + 1] = 1;
+        }
+        
+        /*for (int i = 0; i < 3; ++i) {   
+            if ((_menu[i] == 1) && (i == 2)) {
+                _menu[i] = 0;
+                _menu[0] = 1;
+                break;
+            }
+            else {
+                if (i < 2) {
+                    temp = _menu[i];
+                    _menu[i ] = _menu[i + 1];
+                    _menu[i + 1] = temp;
+                }
+            }
+        }*/
+    }
+    int* _menu = 0;
+private:
+    int _x = 0;
+    int _y = 0;
+    //int* _menu = 0;
+};
+
 int random(int a, int b)
 {
     srand(time(NULL));
@@ -769,7 +881,7 @@ int main()
 
     GameBoard* myBoard = new GameBoard(_HEIGHT, _WIDTH);
 
-    myBoard->show();
+    //myBoard->show();
 
     Block* Box = new blockBox(myBoard);
 
@@ -779,11 +891,13 @@ int main()
 
     Block* DemoStick = new blockStick(myBoard);
 
+    Menu* myMenu = new Menu(20, 20);
+
     //Box->show();
 
     //Stick->show();
 
-    myBoard->showDebug(_DEBUGPOSX, _DEBUGPOSY);
+    //myBoard->showDebug(_DEBUGPOSX, _DEBUGPOSY);
 
     Block* Fig = 0;
 
@@ -799,6 +913,8 @@ int main()
 
     int key = 0;
 
+    int key_menu = 0;
+
     Fig = randomFigure(Box, Stick);
 
     //Fig = Box;
@@ -807,10 +923,32 @@ int main()
 
     NextFig = randomFigure(Box, Stick);
 
-    gotoxy(_DEMOPOSX, _DEMOPOSY);
-    std::cout << "Next fig";
+    /*gotoxy(_DEMOPOSX, _DEMOPOSY);
+    std::cout << "Next fig";*/
+
+    //myMenu->show();
 
     while (true) {
+        while (_MenuFlag) {
+            myMenu->show();
+            key_menu = _getch();
+            gotoxy(20, 20);
+            std::cout << "     ";
+            std::cout << key_menu;
+            switch (key_menu)
+            {
+            case 72:
+                myMenu->moveUp();
+                //myMenu->show();
+                break;
+            case 80:
+                myMenu->moveDown();
+                //myMenu->show();
+                break;
+            default:
+                break;
+            }
+        }
         while (!_kbhit())
         {
             //Box->moveDown();
@@ -823,7 +961,7 @@ int main()
                 Fig = randomFigure(Box, Stick);
                 //((Block*)Fig)->spawn();
                 //Sleep(300);
-                _nextFig = true;
+                //_nextFig = true;
                 Fig->spawn();
                 //break;
             }
@@ -831,28 +969,28 @@ int main()
                 Fig->moveDown();
             }
 
-            if (_nextFig) {
-                //NextFig = 0;
-                NextFig->demoHide(_DEMOPOSX + 3, _DEMOPOSY + 2);
-                if (_RandomCh >= 0 && _RandomCh < 50) {
-                    NextFig->demoShow(_DEMOPOSX + 3, _DEMOPOSY + 2);
-                }
-                else {
-                    NextFig->demoShow(_DEMOPOSX + 3, _DEMOPOSY + 2);
-                }
-                NextFig->demoHide(_DEMOPOSX + 3, _DEMOPOSY + 2);
-                NextFig = randomFigure(Box, Stick);
-                NextFig->demoShow(_DEMOPOSX + 3, _DEMOPOSY + 2);
-                _nextFig = false;
-            }
+            //if (_nextFig) {
+            //    //NextFig = 0;
+            //    NextFig->demoHide(_DEMOPOSX + 3, _DEMOPOSY + 2);
+            //    if (_RandomCh >= 0 && _RandomCh < 50) {
+            //        NextFig->demoShow(_DEMOPOSX + 3, _DEMOPOSY + 2);
+            //    }
+            //    else {
+            //        NextFig->demoShow(_DEMOPOSX + 3, _DEMOPOSY + 2);
+            //    }
+            //    NextFig->demoHide(_DEMOPOSX + 3, _DEMOPOSY + 2);
+            //    NextFig = randomFigure(DemoBox, DemoStick);
+            //    NextFig->demoShow(_DEMOPOSX + 3, _DEMOPOSY + 2);
+            //    _nextFig = false;
+            //}
 
             myBoard->show();
             myBoard->showDebug(_DEBUGPOSX, _DEBUGPOSY);
             Sleep(100);
         }
         key = _getch();
-        //gotoxy(35, 20);
-        //std::cout << key;
+        /*gotoxy(55, 20);
+        std::cout << key;*/
         switch (key)
         {
         case 72:
@@ -882,6 +1020,8 @@ int main()
             Fig->moveRight();
             myBoard->show();
             myBoard->showDebug(_DEBUGPOSX, _DEBUGPOSY);
+            break;
+        case 274:
             break;
         default:
             break;
